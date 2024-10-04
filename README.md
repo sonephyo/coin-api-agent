@@ -1,6 +1,9 @@
-## Overview
+## Software Deployment
 
-This project focuses on software deployment using Go programming and Amazon Web Services (AWS). It encompasses the essential concepts of deploying applications in the cloud, ensuring scalability, reliability, and ease of access.
+
+In today’s fast-paced business world, developing an **effective** and **efficient information infrastructure** is crucial. This infrastructure must ensure **high availability**, support **multiple client platforms**, provide **secure authenticated access**, and allow for **efficient updates**, all while respecting **cost constraints**.
+
+This course focuses on **modern software deployment strategies** that address these challenges. **By the end, you'll gain practical skills** to design and implement robust infrastructures that meet operational needs and align with budgetary requirements.
 
 ## Technologies Used
 
@@ -8,13 +11,6 @@ This project focuses on software deployment using Go programming and Amazon Web 
 - **AWS**: For hosting and managing cloud infrastructure.
 - **Postman**: For API testing and interaction.
 - **Loggly**: For logging and monitoring application performance.
-  
-## Learning Objectives
-
-- Understand the fundamentals of deploying applications using Go.
-- Explore AWS services for effective application hosting and management.
-- Use Postman for API testing and ensuring our endpoints work correctly.
-- Integrate Loggly for logging purposes, allowing us to monitor and debug our applications effectively.
 
 ## Assignment Directory
 [A06b Go Polling Worker and Loggly](A06b%20Go%20Polling%20Worker%20and%20Loggly/)
