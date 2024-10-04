@@ -25,24 +25,22 @@ The worker will log messages to Loggly indicating the success or failure of each
     ```bash
     go mod tidy
     ```
-3. Set up your Loggly API key and other configuration settings.
+3. Create <b>.env</b> file in the same directory and import API Key for <i>CoinApiKey</i> and <i>LOGGLY_TOKEN</i>
+
 
 ## Usage
 1. Run the Go program:
     ```bash
-    go run main.go
+    go run code.go
     ```
-2. The program will periodically fetch data from the specified API and display it on the console.
+2. The program will periodically fetch data from the specified API and display it on the console. (Adjust accordingly on how you want your data to be displayed)
 3. Log messages will be sent to Loggly, indicating whether the requests were successful or failed, along with the data size collected.
 
 ## Example
-Here’s a simple example of the console output:
+Here’s a simple example of the console output from 
 
-```plaintext
-Request successful.
-Data collected:
-{
-  "key1": "value1",
-  "key2": "value2"
-}
+IDX_REFRATE_PRIMKT_ETH_USDT TimeSeries
+
+```
+[{2024-09-28 14:00:00 +0000 UTC 2024-09-28 15:00:00 +0000 UTC 2024-09-28 14:00:00 +0000 UTC 2024-09-28 14:59:00 +0000 UTC 2659.61 2675.29 2659.61 2672.85 0} {2024-09-28 15:00:00 +0000 UTC 2024-09-28 16:00:00 +0000 UTC 2024-09-28 15:00:00 +0000 UTC 2024-09-28 15:59:00 +0000 UTC 2673.56 2673.56 2667.75 2669.62 0} {2024-09-28 16:00:00 +0000 UTC 2024-09-28 17:00:00 +0000 UTC 2024-09-28 16:00:00 +0000 UTC 2024-09-28 16:59:00 +0000 UTC 2669.96 2671.73 2662.6 2665.14 0} {2024-09-28 17:00:00 +0000 UTC 2024-09-28 18:00:00 +0000 UTC 2024-09-28 17:00:00 +0000 UTC 2024-09-28 17:59:00 +0000 UTC 2665.07 2682.15 2663.82 2674.77 0} {2024-09-28 18:00:00 +0000 UTC 2024-09-28 19:00:00 +0000 UTC 2024-09-28 18:00:00 +0000 UTC 2024-09-28 18:59:00 +0000 UTC 2675.47 2683.3 2675 2675 0} {2024-09-28 19:00:00 +0000 UTC 2024-09-28 20:00:00 +0000 UTC 2024-09-28 19:00:00 +0000 UTC 2024-09-28 19:59:00 +0000 UTC 2675.3 2679.88 2674.71 2678.16 0} {2024-09-28 20:00:00 +0000 UTC 2024-09-28 21:00:00 +0000 UTC 2024-09-28 20:00:00 +0000 UTC 2024-09-28 20:59:00 +0000 UTC 2677.89 2679.88 2673.68 2675.82 0} {2024-09-28 21:00:00 +0000 UTC 2024-09-28 22:00:00 +0000 UTC 2024-09-28 21:00:00 +0000 UTC 2024-09-28 21:59:00 +0000 UTC 2675.51 2676.13 2657.76 2670.45 0} {2024-09-28 22:00:00 +0000 UTC 2024-09-28 23:00:00 +0000 UTC 2024-09-28 22:00:00 +0000 UTC 2024-09-28 22:59:00 +0000 UTC 2670.65 2678.68 2665.99 2676.66 0} {2024-09-28 23:00:00 +0000 UTC 2024-09-29 00:00:00 +0000 UTC 2024-09-28 23:00:00 +0000 UTC 2024-09-28 23:59:00 +0000 UTC 2675 2679.68 2669.23 2675.6 0}]
 ```

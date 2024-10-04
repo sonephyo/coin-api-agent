@@ -15,3 +15,6 @@ This project focuses on software deployment using Go programming and Amazon Web 
 - Explore AWS services for effective application hosting and management.
 - Use Postman for API testing and ensuring our endpoints work correctly.
 - Integrate Loggly for logging purposes, allowing us to monitor and debug our applications effectively.
+
+## Assignment Directory
+[A06b Go Polling Worker and Loggly](A06b%20Go%20Polling%20Worker%20and%20Loggly/)
