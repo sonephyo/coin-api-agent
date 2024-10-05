@@ -223,7 +223,7 @@ func main() {
 		return
 	}
 	fmt.Printf("--- ExchangeRates based on %s ---\n", assetIdBase)
-	fmt.Println(exchangeRates.Exchange_Rate_Array[0])
+	fmt.Println(exchangeRates.Exchange_Rate_Array[0:10])
 
 
 	/* -----------------------------------------------------------------
@@ -247,7 +247,7 @@ func main() {
 		return
 	}
 	fmt.Printf("--- %s TimeSeries ---\n", indexId)
-	fmt.Println(timeSeriesEntryArray[0])
+	fmt.Println(timeSeriesEntryArray[0:10])
 	// for index, element := range timeSeriesEntryArray {
 	// 	fmt.Println("At index " , index, ", value: ", element)
 	// }
@@ -276,7 +276,7 @@ func main() {
 		return
 	}
 	fmt.Printf("--- %s OHLCV ---\n", symbolId)
-	fmt.Println(tradeData[0])
+	fmt.Println(tradeData[0:10])
 	// for index, element := range tradeData {
 	// 	fmt.Println("At index " , index, ", value: ", element)
 	// }
