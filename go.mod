@@ -1,4 +1,4 @@
-module code.go
+module csc482-agent
 
 go 1.22.5
 
