@@ -230,7 +230,6 @@ func main() {
 	* Get Request for ETH_USDT_TimeSeries
 	*/
 	indexId := "IDX_REFRATE_PRIMKT_ETH_USDT"
-
 	baseURL = "https://rest.coinapi.io/v1/indexes/" + indexId + "/timeseries"
 
 	parameters = map[string]string{
