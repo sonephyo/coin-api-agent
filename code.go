@@ -10,51 +10,33 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"time"
-	"github.com/joho/godotenv"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	loggly "github.com/jamespearly/loggly"
+	// "github.com/joho/godotenv"
 )
 
-type ExchangeRate struct {
-	TIME string `json:"time"`
-	Asset_ID_QUOTE string `json:"asset_id_quote"`
-	Rate float32 `json:"rate"`
-}
-
-type ExchangeRates struct {
-	Asset_ID_BASE string `json:"asset_id_base"`
-	Exchange_Rate_Array []ExchangeRate `json:"rates"`
-}
-
-type TimeSeriesEntry struct {
-    TimePeriodStart time.Time `json:"time_period_start"`
-    TimePeriodEnd   time.Time `json:"time_period_end"`
-    TimeOpen        time.Time `json:"time_open"`
-    TimeClose       time.Time `json:"time_close"`
-    ValueOpen       float64   `json:"value_open"`
-    ValueHigh       float64   `json:"value_high"`
-    ValueLow        float64   `json:"value_low"`
-    ValueClose      float64   `json:"value_close"`
-    ValueCount      int       `json:"value_count"`
-}
-
 type TradeEntry struct {
-	TimePeriodStart time.Time `json:"time_period_start"`
-	TimePeriodEnd   time.Time `json:"time_period_end"`
-	TimeOpen        time.Time `json:"time_open"`
-	TimeClose       time.Time `json:"time_close"`
-	PriceOpen       float64   `json:"price_open"`
-	PriceHigh       float64   `json:"price_high"`
-	PriceLow        float64   `json:"price_low"`
-	PriceClose      float64   `json:"price_close"`
-	VolumeTraded    float64   `json:"volume_traded"`
-	TradesCount     int       `json:"trades_count"`
+    SymbolID     string    `json:"symbol_id"`
+    TimeExchange time.Time `json:"time_exchange"`
+    TimeCoinAPI  time.Time `json:"time_coinapi"`
+    UUID         string    `json:"uuid"`
+    Price        float64   `json:"price"`
+    Size         float64   `json:"size"`
+    TakerSide    string    `json:"taker_side"`
 }
 
 
@@ -105,59 +87,6 @@ func makeGetRequest(client *http.Client, finalURL string) ([]byte, error) {
 	return body, nil
 }
 
-func getAllExchangeRatesByAssetIDBase(client *http.Client, logglyClient *loggly.ClientType, baseURL string, parameters map[string]string) (ExchangeRates, error)  {
-
-	finalURL, err := createURL(baseURL, parameters)
-	if err != nil {
-		return ExchangeRates{}, err
-	}
-
-	body, err := makeGetRequest(client, finalURL)
-	if err != nil {
-		return ExchangeRates{}, err
-	}
-
-	var exchange_rates ExchangeRates
-
-	err = json.Unmarshal([]byte(body), &exchange_rates)
-	if err != nil {
-		return ExchangeRates{}, err
-	}
-
-
-	err = logglyClient.EchoSend("info", "ExchangeRates successfully fetched")
-	if err != nil {
-		return exchange_rates, err
-	}
-	return exchange_rates, nil
-}
-
-func getTimeSeriesByIndexId(client *http.Client, logglyClient *loggly.ClientType, baseURL string, parameters map[string]string) ([]TimeSeriesEntry, error) {
-	finalURL, err := createURL(baseURL, parameters)
-	if err != nil {
-		return nil, err
-	}
-
-	body, err := makeGetRequest(client, finalURL)
-	if err != nil {
-		return nil, err
-	}
-
-	var timeSeriesEntryArray []TimeSeriesEntry
-
-	err = json.Unmarshal([]byte(body), &timeSeriesEntryArray)
-	if err != nil {
-		return nil, err
-	}
-
-
-	err = logglyClient.EchoSend("info", "TimeSeriesEntryArray successfully fetched")
-	if err != nil {
-		return timeSeriesEntryArray, err
-	}
-	return timeSeriesEntryArray, nil
-}
-
 func getTradeDataBySymbolID(client *http.Client, logglyClient *loggly.ClientType, baseURL string, parameters map[string]string) ([]TradeEntry, error) {
 	finalURL, err := createURL(baseURL, parameters)
 	if err != nil {
@@ -168,105 +97,38 @@ func getTradeDataBySymbolID(client *http.Client, logglyClient *loggly.ClientType
 	if err != nil {
 		return nil, err
 	}
+	
 
 	var tradeEntryArray []TradeEntry
 
 	err = json.Unmarshal([]byte(body), &tradeEntryArray)
 	if err != nil {
+		
 		return nil, err
 	}
 
-	err = logglyClient.EchoSend("info", "TradeEntryArray successfully fetched")
+	err = logglyClient.EchoSend("info", "TradeEntryArray successfully fetched with size " + strconv.Itoa(len(tradeEntryArray)))
 	if err != nil {
 		return tradeEntryArray, err
 	}
 	return tradeEntryArray, nil
 }
 
-
-func main() {
-
-	// Load env file
-	errEnvFile := godotenv.Load(".env")
-	if errEnvFile != nil {
-		panic(errEnvFile)
-	}
-
-	// Set up Loggly
-	tag := "CoinApiLoggly"
-	logglyClient := loggly.New(tag)
-
-	// Get API key from the env file
-	coinApiKey := os.Getenv("CoinApiKey")
-
-	// Starting a http Client
-	client := &http.Client{Timeout: time.Duration(10) * time.Second}
-
-
+func startOperation(coinApiKey string, client *http.Client, logglyClient *loggly.ClientType, dataCount *int, svc *dynamodb.Client) {
 	var baseURL string
 	var parameters map[string]string
-	
-	/* ----------------------------------------------------------------
-	* Get Request for exchange rates based on assetIdBase
-	*/
-
-	assetIdBase := "ETH"
-	parameters = map[string]string{
-		"apiKey": coinApiKey,
-	}
-
-	baseURL = "https://rest.coinapi.io/v1/exchangerate/" + assetIdBase
-	exchangeRates, err := getAllExchangeRatesByAssetIDBase(client, logglyClient, baseURL, parameters)
-	if err != nil {
-		logglyClient.EchoSend("error", err.Error())
-		fmt.Println(err)
-		return
-	}
-	fmt.Printf("--- ExchangeRates based on %s ---\n", assetIdBase)
-	fmt.Println(exchangeRates.Exchange_Rate_Array[0:10])
-
-
-	/* -----------------------------------------------------------------
-	* Get Request for ETH_USDT_TimeSeries
-	*/
-	indexId := "IDX_REFRATE_PRIMKT_ETH_USDT"
-
-	baseURL = "https://rest.coinapi.io/v1/indexes/" + indexId + "/timeseries"
-
-	parameters = map[string]string{
-		"apiKey": coinApiKey,
-		"period_id": "1HRS",
-		"time_start": "2024-09-28T14:00:00Z",
-		"time_end": "2024-09-30T14:00:00Z",
-	}
-
-	timeSeriesEntryArray, err := getTimeSeriesByIndexId(client, logglyClient, baseURL, parameters)
-	if err != nil {
-		logglyClient.EchoSend("error", err.Error())
-		fmt.Println(err)
-		return
-	}
-	fmt.Printf("--- %s TimeSeries ---\n", indexId)
-	fmt.Println(timeSeriesEntryArray[0:10])
-	// for index, element := range timeSeriesEntryArray {
-	// 	fmt.Println("At index " , index, ", value: ", element)
-	// }
 
 	/* -----------------------------------------------------------------
 	* Get Request for ETH_USDT_Binance
-	* Note: Get OHLCV latest timeseries data returned in time descending order. Data can be requested by the period and for the specific symbol eg BITSTAMP_SPOT_BTC_USD, if you need to query timeseries by asset pairs eg. BTC/USD, then please reffer to the Exchange Rates Timeseries data
-	*/
+	* Note: Trades snapshots at a specific time interval	*/
 
 	symbolId := "BINANCE_SPOT_ETH_USDT"
 
-
-	baseURL = "https://rest.coinapi.io/v1/ohlcv/" + symbolId + "/latest"
+	baseURL = "https://rest.coinapi.io/v1/trades/" + symbolId + "/latest"
 
 	parameters = map[string]string{
 		"apiKey": coinApiKey,
-		"period_id": "1HRS",
-		"time_start": "2024-09-28T14:00:00Z",
-		"time_end": "2024-09-30T14:00:00Z",
+		"limit": strconv.Itoa(*dataCount),
 	}
 
 	tradeData, err := getTradeDataBySymbolID(client, logglyClient, baseURL, parameters)
@@ -275,10 +137,113 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	fmt.Printf("--- %s OHLCV ---\n", symbolId)
-	fmt.Println(tradeData[0:10])
+
+	if len(tradeData) == 0 {
+		logglyClient.EchoSend("notice", "The API Request done returned an empty data")
+	}
+
+	for _, element := range tradeData {
+		//Creating a hashmap for AWS
+		av := map[string]types.AttributeValue{
+			"time_exchange": &types.AttributeValueMemberS{Value: element.TimeExchange.Format(time.RFC3339)},
+			"time_coinapi":  &types.AttributeValueMemberS{Value: element.TimeCoinAPI.Format(time.RFC3339)},
+			"uuid":          &types.AttributeValueMemberS{Value: element.UUID},
+			"price":         &types.AttributeValueMemberN{Value: fmt.Sprintf("%f", element.Price)},
+			"size":          &types.AttributeValueMemberN{Value: fmt.Sprintf("%f", element.Size)},
+			"taker_side":    &types.AttributeValueMemberS{Value: element.TakerSide},
+		}
+		
+		// AWS DyanmoDB put operations
+		_, err := svc.PutItem(context.TODO(), &dynamodb.PutItemInput{
+			TableName: aws.String("pphyo_ETH_tradeEntries"),
+			Item: av,
+		})
+
+		if err != nil {
+			logglyClient.EchoSend("error", err.Error())
+			fmt.Println(err)
+			return
+		}
+
+
+
+	}
+
+
+	fmt.Printf("--- First entry of %s OHLCV ---\n", symbolId)
+	if len(tradeData) > 0 {
+		fmt.Println(tradeData[0].UUID + " " + tradeData[0].TimeCoinAPI.GoString() + " " + tradeData[0].TakerSide)
+	} else {
+		fmt.Println("The API request returned an empty data")
+	}
 	// for index, element := range tradeData {
 	// 	fmt.Println("At index " , index, ", value: ", element)
 	// }
-	
+}
+
+
+func main() {
+
+	// Command Line Flags
+	dataCountPtr := flag.Int("count", 50, "dataCount for each request")
+	timeIntervalPtr := flag.Float64("time-interval", 15, "time interval in minutes for each request")
+
+	flag.Parse()
+
+	// AWS DyanmoDB Setup
+	cfg, err := config.LoadDefaultConfig(context.TODO(), func(o *config.LoadOptions) error {
+        o.Region = "us-east-1"
+        return nil
+    })
+    if err != nil {
+        panic(err)
+    }
+	svc := dynamodb.NewFromConfig(cfg)
+
+	// Load env file
+	// errEnvFile := godotenv.Load(".env")
+	// if errEnvFile != nil {
+	// 	panic(errEnvFile)
+	// }
+
+	// Set up Loggly
+	tag := "CoinApiLoggly"
+	logglyClient := loggly.New(tag)
+
+	// Get API key from the env file
+	coinApiKey := os.Getenv("CoinApiKey")
+
+
+	// Starting a http Client
+	client := &http.Client{Timeout: time.Duration(10) * time.Second}
+
+	// Waiting to start until a new minute
+	now := time.Now()
+	fmt.Println(now)
+
+    nextMinute := now.Truncate(time.Minute).Add(time.Minute)
+    duration := nextMinute.Sub(now)
+    fmt.Printf("Waiting for %v to reach the next minute to start the operation ...\n", duration)
+    time.Sleep(duration)
+
+
+	// Tickers
+	ticker := time.NewTicker(time.Duration(*timeIntervalPtr) * time.Minute)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		for {
+			select {
+			case <- ctx.Done():
+				return
+			case t := <-ticker.C:
+				startOperation(coinApiKey, client, logglyClient, dataCountPtr, svc)
+				fmt.Println("Ticker time : " + t.GoString())
+			}
+		}
+	}()
+
+	select{}
 }
