@@ -26,7 +26,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	loggly "github.com/jamespearly/loggly"
-	// "github.com/joho/godotenv"
+	"github.com/joho/godotenv"
 )
 
 type TradeEntry struct {
@@ -201,10 +201,10 @@ func main() {
 	svc := dynamodb.NewFromConfig(cfg)
 
 	// Load env file
-	// errEnvFile := godotenv.Load(".env")
-	// if errEnvFile != nil {
-	// 	panic(errEnvFile)
-	// }
+	errEnvFile := godotenv.Load(".env")
+	if errEnvFile != nil {
+		panic(errEnvFile)
+	}
 
 	// Set up Loggly
 	tag := "CoinApiLoggly"
@@ -221,14 +221,14 @@ func main() {
 	now := time.Now()
 	fmt.Println(now)
 
-    nextMinute := now.Truncate(time.Minute).Add(time.Minute)
-    duration := nextMinute.Sub(now)
-    fmt.Printf("Waiting for %v to reach the next minute to start the operation ...\n", duration)
-    time.Sleep(duration)
+    // nextMinute := now.Truncate(time.Minute).Add(time.Minute)
+    // duration := nextMinute.Sub(now)
+    // fmt.Printf("Waiting for %v to reach the next minute to start the operation ...\n", duration)
+    // time.Sleep(duration)
 
 
 	// Tickers
-	ticker := time.NewTicker(time.Duration(*timeIntervalPtr) * time.Minute)
+	ticker := time.NewTicker(time.Duration(*timeIntervalPtr) * time.Second)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
