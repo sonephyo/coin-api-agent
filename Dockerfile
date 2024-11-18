@@ -1,10 +1,16 @@
-FROM golang:1.22.5-alpine AS builder
+FROM public.ecr.aws/docker/library/golang:latest AS builder
 
+# Set the working directory inside the container
 WORKDIR /app
 
-COPY . .
+# Copy only the Go module files first to cache dependencies
+COPY go.mod go.sum ./
 
-RUN go mod tidy
+# Download and cache Go dependencies
+RUN go mod download
+
+# Copy the rest of the project files
+COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -a -o output .
 
