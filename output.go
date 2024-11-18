@@ -228,7 +228,7 @@ func main() {
 
 
 	// Tickers
-	ticker := time.NewTicker(time.Duration(*timeIntervalPtr) * time.Minute)
+	ticker := time.NewTicker(time.Duration(*timeIntervalPtr) * time.Second)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
