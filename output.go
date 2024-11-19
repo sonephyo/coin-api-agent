@@ -227,7 +227,7 @@ func main() {
     // time.Sleep(duration)
 
 
-	// Tickers
+	// Tickers - Second
 	ticker := time.NewTicker(time.Duration(*timeIntervalPtr) * time.Second)
 
 	ctx, cancel := context.WithCancel(context.Background())
