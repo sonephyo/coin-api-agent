@@ -1,9 +1,3 @@
-## CSC482 - Software Deployment
-
-In today’s fast-paced business world, developing an **effective** and **efficient information infrastructure** is crucial. This infrastructure must ensure **high availability**, support **multiple client platforms**, provide **secure authenticated access**, and allow for **efficient updates**, all while respecting **cost constraints**.
-
-This course focuses on **modern software deployment strategies** that address these challenges, equipping students with practical skills to design and implement robust infrastructures that meet operational needs and align with budgetary requirements.
-
 # Go Polling Worker and Loggly
 
 ## Purpose
